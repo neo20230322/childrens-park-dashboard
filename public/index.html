@@ -398,14 +398,10 @@
   </header>
 
   <div class="key-card">
-    <span class="key-icon">🔑</span>
-    <input
-      class="key-input"
-      id="serviceKey"
-      type="password"
-      placeholder="공공데이터포털 서비스 키 입력"
-      autocomplete="off"
-    />
+    <span class="key-icon">🔒</span>
+    <span style="font-size:13px; color:var(--text-secondary); flex:1;">
+      서비스 키는 서버 환경변수 <code style="font-family:'DM Mono',monospace;font-size:12px;background:var(--green-pale);padding:2px 6px;border-radius:5px;">PARK_API_KEY</code>로 안전하게 관리됩니다.
+    </span>
     <button class="key-btn" onclick="startDashboard()">조회 시작</button>
   </div>
 
@@ -460,7 +456,6 @@
 </div>
 
 <script>
-  let serviceKey = '';
   let timer = null, countdown = null, remaining = 60;
   let prev = { total: 0, general: 0, morning: 0 };
 
@@ -491,9 +486,6 @@
   }
 
   function startDashboard() {
-    const key = document.getElementById('serviceKey').value.trim();
-    if (!key) { alert('서비스 키를 입력해주세요.'); return; }
-    serviceKey = key;
     document.getElementById('refreshBtn').disabled = false;
     clearInterval(timer);
     clearInterval(countdown);
@@ -508,12 +500,11 @@
   }
 
   async function fetchData() {
-    if (!serviceKey) return;
-    remaining = 60;
+      remaining = 60;
     setStatus('loading', '불러오는 중...');
     document.getElementById('errorBanner').style.display = 'none';
     try {
-      const res = await fetch(`/api/visitors?serviceKey=${encodeURIComponent(serviceKey)}&numOfRows=20&pageNo=1`);
+      const res = await fetch('/api/visitors?numOfRows=20&pageNo=1');
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const xml = await res.text();
       parse(xml);
@@ -571,12 +562,7 @@
     b.textContent = '오류: ' + msg;
   }
 
-  // Enter key on input
-  document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('serviceKey').addEventListener('keydown', e => {
-      if (e.key === 'Enter') startDashboard();
-    });
-  });
+
 </script>
 </body>
 </html>

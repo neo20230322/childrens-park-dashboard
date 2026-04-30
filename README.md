@@ -35,12 +35,26 @@ git push -u origin main
 4. **"Deploy"** 클릭 → 1~2분 후 자동 배포 완료
 5. 발급된 URL (예: `https://childrens-park.vercel.app`) 접속
 
-### 3단계: 사용 방법
+### 3단계: 환경변수(서비스 키) 설정
+
+**Vercel 대시보드에서:**
+1. 배포된 프로젝트 → **Settings** → **Environment Variables**
+2. 다음 값 추가:
+   - **Name**: `PARK_API_KEY`
+   - **Value**: 개발계정 상세보기 > **일반 인증키**
+   - **Environment**: Production, Preview, Development 모두 체크
+3. **Save** 후 프로젝트 **Redeploy**
+
+**로컬 개발 시:**
+```bash
+cp .env.example .env
+# .env 파일 열어서 PARK_API_KEY=실제키 입력
+```
+
+### 4단계: 사용 방법
 
 1. 배포된 URL에 접속
-2. [공공데이터포털](https://www.data.go.kr) 에서 발급받은 서비스 키 입력
-   - 검색어: "서울시설공단 어린이대공원 입장객"
-3. **"조회 시작"** 클릭
+2. **"조회 시작"** 클릭 (서비스 키는 서버 환경변수에서 자동으로 사용됨)
 
 ## 기능
 
