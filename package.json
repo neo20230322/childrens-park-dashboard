@@ -1,0 +1,6 @@
+{
+  "name": "childrens-park-dashboard",
+  "version": "1.0.0",
+  "description": "서울 어린이대공원 입장객 현황 대시보드",
+  "private": true
+}

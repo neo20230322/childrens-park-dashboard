@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>어린이대공원 입장객 현황</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --green-deep: #1a3a2a;
+      --green-mid: #2d6a4f;
+      --green-bright: #52b788;
+      --green-light: #b7e4c7;
+      --green-pale: #d8f3dc;
+      --cream: #f8f4ec;
+      --amber: #e07b39;
+      --sky: #74c0fc;
+      --text-primary: #1a2e20;
+      --text-secondary: #4a6741;
+      --text-muted: #8aab88;
+      --border: rgba(45, 106, 79, 0.15);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: var(--cream);
+      color: var(--text-primary);
+      min-height: 100vh;
+    }
+
+    /* decorative bg pattern */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(circle at 15% 20%, rgba(82,183,136,0.08) 0%, transparent 50%),
+        radial-gradient(circle at 85% 75%, rgba(82,183,136,0.06) 0%, transparent 45%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      margin-bottom: 2.5rem;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .header-left { flex: 1; }
+
+    .park-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--green-mid);
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+    }
+
+    .park-label::before {
+      content: '';
+      display: block;
+      width: 20px;
+      height: 2px;
+      background: var(--green-bright);
+      border-radius: 2px;
+    }
+
+    h1 {
+      font-size: clamp(22px, 4vw, 32px);
+      font-weight: 700;
+      color: var(--green-deep);
+      line-height: 1.25;
+    }
+
+    h1 span {
+      color: var(--green-bright);
+    }
+
+    .header-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      background: white;
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin-top: 4px;
+      transition: all 0.3s;
+    }
+
+    .status-pill .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      transition: background 0.3s;
+    }
+
+    .status-pill.live .dot {
+      background: var(--green-bright);
+      box-shadow: 0 0 0 3px rgba(82,183,136,0.2);
+      animation: breathe 2s ease-in-out infinite;
+    }
+
+    .status-pill.loading .dot { background: var(--amber); animation: breathe 0.8s ease-in-out infinite; }
+    .status-pill.error .dot { background: #e05c5c; }
+
+    @keyframes breathe {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* ── KEY INPUT ── */
+    .key-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 2rem;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .key-icon {
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .key-input {
+      flex: 1;
+      background: var(--green-pale);
+      border: 1px solid transparent;
+      border-radius: 10px;
+      padding: 9px 14px;
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .key-input:focus {
+      border-color: var(--green-bright);
+    }
+
+    .key-input::placeholder { color: var(--text-muted); }
+
+    .key-btn {
+      background: var(--green-mid);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 9px 20px;
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .key-btn:hover { background: var(--green-deep); }
+    .key-btn:active { transform: scale(0.97); }
+
+    /* ── METRIC CARDS ── */
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 2rem;
+    }
+
+    .metric {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.2rem 1.25rem;
+      position: relative;
+      overflow: hidden;
+      transition: box-shadow 0.2s;
+    }
+
+    .metric:hover { box-shadow: 0 4px 20px rgba(45,106,79,0.08); }
+
+    .metric::after {
+      content: '';
+      position: absolute;
+      top: 0; right: 0;
+      width: 60px; height: 60px;
+      border-radius: 0 14px 0 60px;
+      background: var(--green-pale);
+      opacity: 0.6;
+    }
+
+    .metric-icon {
+      font-size: 16px;
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    .metric-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .metric-value {
+      font-family: 'DM Mono', monospace;
+      font-size: 28px;
+      font-weight: 500;
+      color: var(--green-deep);
+      line-height: 1;
+      transition: color 0.4s;
+    }
+
+    .metric-value.flash { color: var(--green-bright); }
+
+    .metric-unit {
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* ── TABLE ── */
+    .table-wrap {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .table-head {
+      display: grid;
+      grid-template-columns: 110px 1fr 1fr 110px;
+      gap: 8px;
+      padding: 12px 20px;
+      background: var(--green-pale);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .table-body { }
+
+    .t-row {
+      display: grid;
+      grid-template-columns: 110px 1fr 1fr 110px;
+      gap: 8px;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      align-items: center;
+      transition: background 0.15s;
+      animation: fadeIn 0.3s ease both;
+    }
+
+    .t-row:last-child { border-bottom: none; }
+    .t-row:hover { background: rgba(216,243,220,0.35); }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    .date-cell {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .loc-cell { color: var(--text-secondary); font-size: 13px; }
+
+    .type-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .type-general { background: var(--green-pale); color: var(--green-mid); }
+    .type-morning { background: #e8f4fd; color: #1971c2; }
+    .type-other { background: #f8f4ec; color: #7d6c4e; }
+
+    .count-cell {
+      font-family: 'DM Mono', monospace;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--green-deep);
+      text-align: right;
+    }
+
+    .table-footer {
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--border);
+      background: var(--green-pale);
+    }
+
+    .refresh-btn {
+      font-size: 12px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-family: 'Noto Sans KR', sans-serif;
+      transition: all 0.15s;
+    }
+    .refresh-btn:hover { background: var(--green-pale); border-color: var(--green-bright); }
+    .refresh-btn:disabled { opacity: 0.5; cursor: default; }
+
+    .countdown {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: 'DM Mono', monospace;
+    }
+
+    .empty-state {
+      padding: 3rem 2rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    .empty-icon { font-size: 32px; display: block; margin-bottom: 0.75rem; }
+
+    .error-banner {
+      background: #fff5f5;
+      border: 1px solid #ffc9c9;
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.5rem;
+      font-size: 13px;
+      color: #c92a2a;
+      display: none;
+    }
+
+    @media (max-width: 600px) {
+      .table-head, .t-row { grid-template-columns: 90px 1fr 90px; }
+      .table-head > *:nth-child(2), .t-row > *:nth-child(2) { display: none; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header class="header">
+    <div class="header-left">
+      <div class="park-label">Seoul Facilities Corporation</div>
+      <h1>어린이대공원<br /><span>입장객 현황</span></h1>
+      <p class="header-meta">서울시설공단 OpenAPI · 일별 입장객 인원 정보 v1.0</p>
+    </div>
+    <div class="status-pill" id="statusPill">
+      <div class="dot"></div>
+      <span id="statusText">대기 중</span>
+    </div>
+  </header>
+
+  <div class="key-card">
+    <span class="key-icon">🔑</span>
+    <input
+      class="key-input"
+      id="serviceKey"
+      type="password"
+      placeholder="공공데이터포털 서비스 키 입력"
+      autocomplete="off"
+    />
+    <button class="key-btn" onclick="startDashboard()">조회 시작</button>
+  </div>
+
+  <div class="error-banner" id="errorBanner"></div>
+
+  <div class="metrics">
+    <div class="metric">
+      <span class="metric-icon">👥</span>
+      <div class="metric-label">전체 누적 건수</div>
+      <div class="metric-value" id="mTotal">—</div>
+      <div class="metric-unit">건 (API 총 결과)</div>
+    </div>
+    <div class="metric">
+      <span class="metric-icon">🚶</span>
+      <div class="metric-label">일반 입장객 합계</div>
+      <div class="metric-value" id="mGeneral">—</div>
+      <div class="metric-unit">명 (조회 결과 기준)</div>
+    </div>
+    <div class="metric">
+      <span class="metric-icon">🌅</span>
+      <div class="metric-label">조기 산책객 합계</div>
+      <div class="metric-value" id="mMorning">—</div>
+      <div class="metric-unit">명 (조회 결과 기준)</div>
+    </div>
+    <div class="metric">
+      <span class="metric-icon">📅</span>
+      <div class="metric-label">최근 데이터 일자</div>
+      <div class="metric-value" id="mDate" style="font-size:18px">—</div>
+      <div class="metric-unit">기준</div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <div class="table-head">
+      <span>일자</span>
+      <span>위치</span>
+      <span>구분</span>
+      <span style="text-align:right">입장객 수</span>
+    </div>
+    <div class="table-body" id="tableBody">
+      <div class="empty-state">
+        <span class="empty-icon">🌳</span>
+        서비스 키를 입력하고 조회를 시작하세요.
+      </div>
+    </div>
+    <div class="table-footer">
+      <button class="refresh-btn" id="refreshBtn" onclick="fetchData()" disabled>↻ 새로고침</button>
+      <span class="countdown" id="countdown"></span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let serviceKey = '';
+  let timer = null, countdown = null, remaining = 60;
+  let prev = { total: 0, general: 0, morning: 0 };
+
+  function fmt(d) {
+    if (!d || d.length < 8) return d;
+    return d.slice(0,4) + '.' + d.slice(4,6) + '.' + d.slice(6,8);
+  }
+
+  function animNum(id, from, to, dur = 800) {
+    const el = document.getElementById(id);
+    if (!el || from === to) { el && (el.textContent = to.toLocaleString('ko-KR')); return; }
+    el.classList.add('flash');
+    const t0 = performance.now();
+    const step = ts => {
+      const p = Math.min((ts - t0) / dur, 1);
+      const e = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(from + (to - from) * e).toLocaleString('ko-KR');
+      if (p < 1) requestAnimationFrame(step);
+      else { el.textContent = to.toLocaleString('ko-KR'); setTimeout(() => el.classList.remove('flash'), 400); }
+    };
+    requestAnimationFrame(step);
+  }
+
+  function setStatus(state, text) {
+    const pill = document.getElementById('statusPill');
+    pill.className = 'status-pill ' + state;
+    document.getElementById('statusText').textContent = text;
+  }
+
+  function startDashboard() {
+    const key = document.getElementById('serviceKey').value.trim();
+    if (!key) { alert('서비스 키를 입력해주세요.'); return; }
+    serviceKey = key;
+    document.getElementById('refreshBtn').disabled = false;
+    clearInterval(timer);
+    clearInterval(countdown);
+    remaining = 60;
+    fetchData();
+    timer = setInterval(fetchData, 60000);
+    countdown = setInterval(() => {
+      remaining--;
+      if (remaining <= 0) remaining = 60;
+      document.getElementById('countdown').textContent = `다음 자동 갱신 ${remaining}초 후`;
+    }, 1000);
+  }
+
+  async function fetchData() {
+    if (!serviceKey) return;
+    remaining = 60;
+    setStatus('loading', '불러오는 중...');
+    document.getElementById('errorBanner').style.display = 'none';
+    try {
+      const res = await fetch(`/api/visitors?serviceKey=${encodeURIComponent(serviceKey)}&numOfRows=20&pageNo=1`);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const xml = await res.text();
+      parse(xml);
+    } catch(e) {
+      showError(e.message);
+      setStatus('error', '오류 발생');
+    }
+  }
+
+  function parse(xml) {
+    const doc = new DOMParser().parseFromString(xml, 'text/xml');
+    const rc = doc.querySelector('resultCode')?.textContent;
+    if (rc && rc !== '00') throw new Error('API 오류: ' + doc.querySelector('resultMsg')?.textContent);
+
+    const totalCount = parseInt(doc.querySelector('totalCount')?.textContent || '0');
+    const items = [...doc.querySelectorAll('GetEnterCountQryVO')];
+    if (!items.length) { showError('데이터가 없습니다.'); setStatus('error', '데이터 없음'); return; }
+
+    let gen = 0, mor = 0;
+    const rows = items.map(it => {
+      const date = it.querySelector('processdate')?.textContent || '';
+      const loc = it.querySelector('locagioncd')?.textContent || '';
+      const type = it.querySelector('entercd')?.textContent || '';
+      const cnt = parseInt(it.querySelector('entercnt')?.textContent || '0');
+      if (type.includes('일반')) gen += cnt;
+      if (type.includes('조기')) mor += cnt;
+      return { date, loc, type, cnt };
+    }).sort((a,b) => b.date.localeCompare(a.date));
+
+    animNum('mTotal', prev.total, totalCount);
+    animNum('mGeneral', prev.general, gen);
+    animNum('mMorning', prev.morning, mor);
+    document.getElementById('mDate').textContent = fmt(rows[0]?.date || '');
+    prev = { total: totalCount, general: gen, morning: mor };
+
+    renderTable(rows);
+    setStatus('live', '실시간 · ' + new Date().toLocaleTimeString('ko-KR'));
+  }
+
+  function renderTable(rows) {
+    document.getElementById('tableBody').innerHTML = rows.map((r, i) => {
+      const bc = r.type.includes('일반') ? 'type-general' : r.type.includes('조기') ? 'type-morning' : 'type-other';
+      return `<div class="t-row" style="animation-delay:${i*30}ms">
+        <span class="date-cell">${fmt(r.date)}</span>
+        <span class="loc-cell">${r.loc}</span>
+        <span><span class="type-badge ${bc}">${r.type}</span></span>
+        <span class="count-cell">${r.cnt.toLocaleString('ko-KR')}명</span>
+      </div>`;
+    }).join('');
+  }
+
+  function showError(msg) {
+    const b = document.getElementById('errorBanner');
+    b.style.display = 'block';
+    b.textContent = '오류: ' + msg;
+  }
+
+  // Enter key on input
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('serviceKey').addEventListener('keydown', e => {
+      if (e.key === 'Enter') startDashboard();
+    });
+  });
+</script>
+</body>
+</html>
