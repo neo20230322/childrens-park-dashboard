@@ -1,21 +1,19 @@
-# 어린이대공원 입장객 현황 대시보드
-
-서울시설공단 OpenAPI를 활용한 어린이대공원 일별 입장객 현황 대시보드입니다.
+# 어린이대공원 입장객 현황 대시보드 (Render.com)
 
 ## 파일 구조
 
 ```
-childrens-park-dashboard/
-├── api/
-│   └── visitors.js      ← Vercel 서버리스 함수 (CORS 프록시)
+childrens-park-render/
+├── server.js          ← Express 서버 (API 프록시)
 ├── public/
-│   └── index.html       ← 대시보드 UI
-├── vercel.json          ← Vercel 설정
+│   └── index.html     ← 대시보드 UI
 ├── package.json
+├── .env.example
+├── .gitignore
 └── README.md
 ```
 
-## Vercel 배포 방법
+## Render.com 배포 방법
 
 ### 1단계: GitHub에 올리기
 
@@ -23,48 +21,48 @@ childrens-park-dashboard/
 git init
 git add .
 git commit -m "어린이대공원 대시보드"
-git remote add origin https://github.com/본인아이디/childrens-park-dashboard.git
+git remote add origin https://github.com/본인아이디/childrens-park-render.git
 git push -u origin main
 ```
 
-### 2단계: Vercel 배포
+### 2단계: Render에서 서비스 생성
 
-1. https://vercel.com 에서 GitHub 계정으로 가입/로그인
-2. **"Add New Project"** 클릭
-3. 위에서 만든 GitHub 저장소 선택
-4. **"Deploy"** 클릭 → 1~2분 후 자동 배포 완료
-5. 발급된 URL (예: `https://childrens-park.vercel.app`) 접속
+1. https://render.com 에서 GitHub 계정으로 가입/로그인
+2. **"New +"** → **"Web Service"** 클릭
+3. GitHub 저장소 연결
+4. 아래 설정 입력:
 
-### 3단계: 환경변수(서비스 키) 설정
+| 항목 | 값 |
+|---|---|
+| **Name** | childrens-park-dashboard |
+| **Runtime** | Node |
+| **Build Command** | `npm install` |
+| **Start Command** | `npm start` |
+| **Instance Type** | Free |
 
-**Vercel 대시보드에서:**
-1. 배포된 프로젝트 → **Settings** → **Environment Variables**
-2. 다음 값 추가:
-   - **Name**: `PARK_API_KEY`
-   - **Value**: 개발계정 상세보기 > **일반 인증키**
-   - **Environment**: Production, Preview, Development 모두 체크
-3. **Save** 후 프로젝트 **Redeploy**
+5. **"Advanced"** 펼치기 → **"Add Environment Variable"**:
+   - Key: `PARK_API_KEY`
+   - Value: 개발계정 상세보기 > **일반 인증키** 붙여넣기
 
-**로컬 개발 시:**
+6. **"Create Web Service"** 클릭 → 2~3분 후 배포 완료
+
+### 3단계: 고정 IP 확인 후 등록
+
+배포 후 Render 대시보드에서 **Static Outbound IP**를 확인:
+- 서비스 선택 → **Settings** → **Static Outbound IP Address**
+
+이 IP를 공공데이터포털 또는 서울시설공단에 IP 허용 요청하면 됩니다.
+
+> ⚠️ Free 플랜은 Static IP가 지원되지 않을 수 있습니다.
+> 이 경우 Starter 플랜($7/월) 사용 필요.
+
+## 로컬 개발
+
 ```bash
 cp .env.example .env
-# .env 파일 열어서 PARK_API_KEY=실제키 입력
+# .env 파일에 실제 키 입력
+
+npm install
+npm start
+# http://localhost:3000 접속
 ```
-
-### 4단계: 사용 방법
-
-1. 배포된 URL에 접속
-2. **"조회 시작"** 클릭 (서비스 키는 서버 환경변수에서 자동으로 사용됨)
-
-## 기능
-
-- 매 1분마다 자동으로 API 호출
-- 숫자 변경 시 부드러운 카운팅 애니메이션
-- 총 입장객 수 / 일반 입장객 / 조기산책객 집계
-- 최근 입장 데이터 테이블
-
-## API 정보
-
-- **엔드포인트**: `http://data.sisul.or.kr/AutoAPI/service/OpenDB/EnterCount/getEnterCountQry`
-- **서비스 ID**: EnterCount
-- **제공기관**: 서울시설공단

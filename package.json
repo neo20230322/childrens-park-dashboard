@@ -1,5 +1,12 @@
 {
-  "name": "childrens-park-dashboard",
+  "name": "childrens-park-render",
   "version": "1.0.0",
-  "description": "서울 어린이대공원 입장객 현황 대시보드"
+  "description": "서울 어린이대공원 입장객 현황 대시보드",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
 }
