@@ -1,11 +1,10 @@
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const serviceKey = process.env.PARK_API_KEY;
 
-  // 디버그: 환경변수 확인 (키 앞 10자만 노출)
   if (!serviceKey) {
     return res.status(500).json({
       error: 'PARK_API_KEY 환경변수가 없습니다.',
@@ -32,14 +31,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // XML 응답인지 확인
-    if (!text.includes('<')) {
-      return res.status(500).json({
-        error: '예상치 못한 응답 형식',
-        apiResponse: text.slice(0, 500)
-      });
-    }
-
     res.setHeader('Content-Type', 'application/xml; charset=utf-8');
     res.status(200).send(text);
 
@@ -49,4 +40,4 @@ export default async function handler(req, res) {
       url: url.replace(serviceKey, '[KEY_HIDDEN]')
     });
   }
-}
+};
